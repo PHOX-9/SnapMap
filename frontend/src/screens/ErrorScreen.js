@@ -1,27 +1,45 @@
 import React from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ErrorScreen = ({ navigation }) => {
   return (
-    <View style={styles.root}>
-      <Text style={styles.text}>You are on ErrorScreen</Text>
-      <Button title="Go Back Home" onPress={() => navigation.navigate("HomeScreen")} />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.errorText}>404 ERROR!</Text>
+        <Text style={styles.messageText}>
+          please check you connection{'\n'}and try again!
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default ErrorScreen;
 
 const styles = StyleSheet.create({
- root: {
-    textAlign: 'center',
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF5F5',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    flex: 1,
+    paddingHorizontal: 20,
   },
-  text: {
+  errorText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  messageText: {
     fontSize: 18,
-    marginBottom: 10,
+    fontWeight: 'normal',
+    color: '#000',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
