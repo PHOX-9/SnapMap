@@ -5,7 +5,6 @@ import * as Location from "expo-location";
 import type { ScreenProps } from "../types";
 import { FontAwesome } from "@expo/vector-icons";
 
-
 const MapScreen = ({ navigation }: ScreenProps<"MapScreen">) => {
   const [location, setLocation] = useState<{
     latitude: number;
@@ -35,7 +34,7 @@ const MapScreen = ({ navigation }: ScreenProps<"MapScreen">) => {
   if (!location) {
     return (
       <View style={styles.loading}>
-        <Text>Fetching location...</Text>
+        <Text>Loading Map</Text>
       </View>
     );
   }
@@ -51,12 +50,22 @@ const MapScreen = ({ navigation }: ScreenProps<"MapScreen">) => {
           latitudeDelta: 0.002,
           longitudeDelta: 0.002,
         }}
-        showsUserLocation
-        showsMyLocationButton
+        showsUserLocation={true}
+        showsMyLocationButton={true}
       />
-    <TouchableOpacity style={styles.cameraButton}>
+      <TouchableOpacity
+        style={styles.CameraButton}
+        onPress={() => navigation.navigate("CameraScreen")}
+      >
         <FontAwesome name="camera" size={20} color="white" />
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.HomeButton}
+        onPress={() => navigation.navigate("HomeScreen")}
+      >
+        <FontAwesome name="home" size={25} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -76,16 +85,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cameraButton: {
-    position: "absolute",  
-    bottom: 100,    
+  CameraButton: {
+    position: "absolute",
+    bottom: 100,
     right: 20,
     width: 60,
     height: 60,
     borderRadius: 10,
-    backgroundColor: "#DB001A", 
+    backgroundColor: "#DB001A",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5,         
+  },
+  HomeButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+    backgroundColor: "#DB001A",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
