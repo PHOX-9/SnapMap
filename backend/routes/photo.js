@@ -1,9 +1,14 @@
 import express from "express";
 import multer from "multer";
 import authMiddleware from "../middleware/authentication.js";
-import { uploadPhoto, getAllPhotos, testUploadPhoto } from "../controllers/photoController.js";
+import { uploadPhoto, uploadPhotos, getAllPhotos, testUploadPhoto } from "../controllers/photoController.js";
+
 
 const router = express.Router();
+router.get("/ping", (req, res) => {
+  res.json({ pong: true });
+});
+
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -16,8 +21,29 @@ const upload = multer({
   },
 });
 
-router.post("/upload-photo", authMiddleware, upload.single("photo"), uploadPhoto);
-router.post("/test-upload", upload.single("photo"), testUploadPhoto); // Test route without auth
+router.post(
+  "/upload-photo",
+  authMiddleware,
+  upload.single("photo"),
+  uploadPhoto
+);
+
+router.post(
+  "/upload-photos",
+  authMiddleware,
+  upload.array("photos[]", 10),
+  uploadPhotos
+);
+
+router.post(
+  "/test-upload",
+  upload.single("photo"),
+  testUploadPhoto
+);
+
 router.get("/all-photos", getAllPhotos);
+
+
+
 
 export default router

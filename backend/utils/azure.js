@@ -19,9 +19,9 @@ async function uploadToAzure(buffer, fileName) {
 
     try {
         await blobServiceClient.getAccountInfo();
-        console.log("✅ Azure Blob Storage Connected");
+        console.log(" Azure Blob Storage Connected");
     } catch (err) {
-        console.error("❌ Azure Blob Connection Failed:", err.message);
+        console.error(" Azure Blob Connection Failed:", err.message);
         throw err;
     }
 

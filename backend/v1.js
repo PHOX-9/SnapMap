@@ -1,7 +1,7 @@
-import express from "express"
-import healthRoute from "../backend/routes/health.js";
-import authRoute from "../backend/routes/auth.js";
-import photoRoute from "../backend/routes/photo.js";
+import express from "express";
+import healthRoute from "./routes/health.js";
+import authRoute from "./routes/auth.js";
+import photoRoute from "./routes/photo.js";
 
 
 const router = express.Router();

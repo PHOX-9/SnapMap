@@ -156,3 +156,65 @@ export const testUploadPhoto = async (req, res) => {
     });
   }
 };
+
+
+// multiple uploads added here//
+
+export const uploadPhotos = async(req,res)=>{
+  try{
+    const{lat,lon} = req.body || {};
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+
+    if(!req.userId){
+      return res.status(401).json({ message: "Unauthorized"});
+    }
+        if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No photos provided" });
+    }
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return res.status(400).json({ message: "Invalid or missing lat/lon" });
+    }
+       const user = await User.findOne({ clerkUserId: req.userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not registered" });
+    }
+
+    const uploadedPhotos = [];
+
+    for (const file of req.files) {
+      const fileName = buildFileName(file.originalname, req.userId);
+      const imageUrl = await uploadToAzure(file.buffer, fileName);
+
+      const photo = await Photo.create({
+        userId: user._id,
+        clerkUserId: req.userId,
+        imageUrl,
+        location: {
+          type: "Point",
+          coordinates: [longitude, latitude],
+        },
+        timestamp: new Date(),
+        eventId: null,
+      });
+
+      uploadedPhotos.push({
+        photoId: photo._id,
+        imageUrl,
+      });
+    }
+
+        return res.status(201).json({
+      status: "success",
+      count: uploadedPhotos.length,
+      photos: uploadedPhotos,
+    });
+  } catch (error) {
+    console.error("Upload multiple photos error:", error);
+    return res.status(500).json({
+      message: "Internal server error: " + error.message,
+    });
+
+  }
+};
