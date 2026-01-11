@@ -24,6 +24,9 @@ const API_BASE_URL =
 
 const styles = ProfileStyle;
 
+// Year options - same as RegisterUserScreen
+const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th", "5th", "Graduate", "Other"];
+
 // Mock data for gallery images
 const mockGalleryImages = [
   { id: "1", url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300" },
@@ -80,6 +83,9 @@ const ProfileScreen = ({ navigation }: ScreenProps<"ProfileScreen">) => {
     name: string;
   } | null>(null);
 
+  // Year dropdown visibility
+  const [yearDropdownVisible, setYearDropdownVisible] = useState(false);
+
   // Stats (mock data for now)
   const stats = {
     snaps: 124,
@@ -88,17 +94,71 @@ const ProfileScreen = ({ navigation }: ScreenProps<"ProfileScreen">) => {
   };
 
   useEffect(() => {
-    if (user) {
-      setProfile((prev) => ({
-        ...prev,
-        name: user.firstName || user.username || "User",
-        collegeName: (user.publicMetadata?.collegeName as string) || "UCLA",
-        phoneNumber: (user.publicMetadata?.phoneNumber as string) || "",
-        year: (user.publicMetadata?.year as string) || "'25",
-        profileImage: user.imageUrl || null,
-      }));
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    try {
+      const token = await getToken();
+      
+      if (!token) {
+        // Fall back to Clerk user data if not authenticated
+        if (user) {
+          setProfile((prev) => ({
+            ...prev,
+            name: user.firstName || user.username || "User",
+            collegeName: (user.publicMetadata?.collegeName as string) || "",
+            phoneNumber: (user.publicMetadata?.phoneNumber as string) || "",
+            year: (user.publicMetadata?.year as string) || "",
+            profileImage: user.imageUrl || null,
+          }));
+        }
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/get-profile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.user) {
+        setProfile({
+          name: data.user.name || "",
+          collegeName: data.user.collegeName || "",
+          phoneNumber: data.user.phoneNumber || "",
+          year: data.user.year || "",
+          profileImage: data.user.profileImage || null,
+          bio: data.user.bio || "Chasing sunsets & finals",
+        });
+      } else {
+        // Fall back to Clerk user data
+        if (user) {
+          setProfile((prev) => ({
+            ...prev,
+            name: user.firstName || user.username || "User",
+            profileImage: user.imageUrl || null,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      // Fall back to Clerk user data on error
+      if (user) {
+        setProfile((prev) => ({
+          ...prev,
+          name: user.firstName || user.username || "User",
+          profileImage: user.imageUrl || null,
+        }));
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }, [user]);
+  };
 
   const openEditModal = () => {
     setEditForm({
@@ -275,7 +335,7 @@ const ProfileScreen = ({ navigation }: ScreenProps<"ProfileScreen">) => {
 
           {/* Class Badge */}
           <View style={styles.classBadge}>
-            <Text style={styles.classBadgeText}>Class of {profile.year}</Text>
+            <Text style={styles.classBadgeText}>{profile.year ? `${profile.year} Year` : "Year not set"}</Text>
           </View>
 
           {/* Edit Profile Button */}
@@ -407,13 +467,14 @@ const ProfileScreen = ({ navigation }: ScreenProps<"ProfileScreen">) => {
             {/* Year Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Year</Text>
-              <TextInput
+              <TouchableOpacity
                 style={styles.textInput}
-                value={editForm.year}
-                onChangeText={(text) => setEditForm((prev) => ({ ...prev, year: text }))}
-                placeholder="e.g., '25"
-                placeholderTextColor="#999"
-              />
+                onPress={() => setYearDropdownVisible(true)}
+              >
+                <Text style={{ color: editForm.year ? "#333" : "#999" }}>
+                  {editForm.year || "Select Year"}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Save Button */}
@@ -431,6 +492,58 @@ const ProfileScreen = ({ navigation }: ScreenProps<"ProfileScreen">) => {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* Year Dropdown Modal */}
+      <Modal
+        visible={yearDropdownVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setYearDropdownVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setYearDropdownVisible(false)}
+        >
+          <View style={{
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            padding: 8,
+            width: "80%",
+            maxHeight: 300,
+          }}>
+            <ScrollView>
+              {YEAR_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#f0f0f0",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                  onPress={() => {
+                    setEditForm((prev) => ({ ...prev, year: option }));
+                    setYearDropdownVisible(false);
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 16,
+                    color: editForm.year === option ? "#FF6B8A" : "#333",
+                  }}>
+                    {option}
+                  </Text>
+                  {editForm.year === option && (
+                    <Ionicons name="checkmark" size={20} color="#FF6B8A" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
